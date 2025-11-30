@@ -4,14 +4,23 @@ import { LoanCard } from './LoanCard';
 import { LoanContext } from '../LoanContext';
 
 export function Form(props) {
+    const formStyle = {
+        flex: 1,
+        overflow: "auto",
+        height: "100%"
+    }
     const loans = useContext(LoanContext);
-    console.log(loans);
+
+    const addLoanButtonEnabled = loans.length < 20
+        ? true
+        : false;
+        
     return (
-        <>
-        {loans.map(loan => 
-            <LoanCard />
+        <div style={formStyle}>
+        {loans.map((_, index) => 
+            <LoanCard key={index} index={index} editLoan={props.editLoan}/>
         )}
-        <button onClick={props.addLoan}>+</button>
-        </>
+        <button disabled={!addLoanButtonEnabled} onClick={props.addLoan}>+</button>
+        </div>
     );
 }
