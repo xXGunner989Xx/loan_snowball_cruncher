@@ -4,23 +4,38 @@ import { useReducer } from 'react';
 import { LoanContext } from './LoanContext';
 import { SimpleLoan } from './loans/Loan'
 import { Graph } from './components/Graph';
+import { generateSeries } from './loans/payoff';
+import { useState } from 'react';
 
 function App() {
   function reducer(state, action) {
+    const loans = state.loans;
     switch (action.type) {
       case 'add-loan':
         return {
-          loans: state.loans.concat(action.loan)
+          loans: loans.concat(action.loan)
         }
       case 'edit-loan':
-        const loans = state.loans;
-        loans[action.index].principal = action.principal;
-        loans[action.index].rate = action.rate;
+        loans[action.index].principal = Math.round(action.principal * 100) / 100;
+        loans[action.index].rate = Math.round(action.rate * 100) / 100;
+        loans[action.index].minPayment = Math.round(action.minPayment * 100) / 100
         return {
           loans: loans
         }
+      case 'delete-loan':
+        if (loans && loans.length === 0) {
+          return;
+        }
+        return {
+          loans: loans.slice(0, loans.length - 1)
+        };
+      default:
+        break;
     }
   }
+
+  const [graphSeries, setGraphSeries] = useState([]);
+  const [extraPayment, setExtraPayment] = useState(0);
 
   function handleAddNewLoan() {
     dispatch({
@@ -29,29 +44,41 @@ function App() {
     });
   }
 
-  function handleEditLoan(index, principal, rate) {
+  function handleEditLoan(index, principal, rate, minPayment) {
     dispatch({
       type: 'edit-loan',
       index: index,
       principal: principal,
-      rate: rate
+      rate: rate,
+      minPayment: minPayment
     })
+  }
+
+  function handleDeleteLoan() {
+    dispatch({
+      type: 'delete-loan'
+    });
   }
 
   const [state, dispatch] = useReducer(reducer, { loans: [] });
 
   return (
-    <div style={{
-      display: 'flex',
-      height: '400px', // adjust as needed
-      width: '100%',   // adjust as needed
-      gap: '16px'      // optional: space between graph and form
-    }}>
       <LoanContext value={state.loans}>
-        <Graph />
-        <Form addLoan={handleAddNewLoan} editLoan={handleEditLoan} />
+        <div style={{
+          display: 'flex',
+          height: '400px', // adjust as needed
+          width: '100%',   // adjust as needed
+          gap: '16px'      // optional: space between graph and form
+        }}>
+          <Graph series={graphSeries}/>
+          <Form setExtraPayment={setExtraPayment} addLoan={handleAddNewLoan} editLoan={handleEditLoan} deleteLoan={handleDeleteLoan} />
+        </div>
+        <div>
+          <button onClick={() => generateSeries(state.loans, extraPayment, setGraphSeries)}>
+            Calculate Snowball
+          </button>
+        </div>
       </LoanContext>
-    </div>
   );
 }
 

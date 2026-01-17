@@ -12,6 +12,37 @@ ChartJS.register(
     Tooltip
 )
 
+/**
+ * 
+ * @param {Date} date 
+ * @returns {string} YYYY-mm
+ */
+function generateDateString(date) {
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+  const formattedMonth = month < 10 ? `0${month.toString()}` : `${month.toString()}`;
+  return `${year.toString()}-${formattedMonth}`
+}
+
+/**
+ * 
+ * @param {number[][]} data 
+ * @returns {string[]}
+ */
+function getDateLabelsFromData(data) {
+    if (data.length >= 1) {
+        const ret = [];
+        let curr = new Date();
+        ret.push(generateDateString(curr));
+        data[0].forEach(point => {
+            curr.setMonth(curr.getMonth() + 1);
+            ret.push(generateDateString(curr));
+        })
+        return ret;
+    }
+    return [];
+}
+
 export function Graph(props) {
     const style = {
         flex: 2,
@@ -21,28 +52,27 @@ export function Graph(props) {
         justifyContent: 'center'
     }
 
-    // useMemo(() => snowball(loans, extraPayment), [loans, extraPayment])
-    const loans = useContext(LoanContext);
-
     const options = {
-    responsive: true,
-    plugins: {
-        title: {
-        display: true,
-        text: 'Chart.js Line Chart',
+        responsive: true,
+        plugins: {
+            title: {
+            display: true,
+            text: 'Chart.js Line Chart',
+            },
         },
-    },
     };
 
-    const labels = ["January", "February", "March"];
+    const formattedSeries = props.series.map((arr, i) => {
+        return {
+            label: i.toString(),
+            data: arr
+        }
+    });
+
+    const labels = getDateLabelsFromData(props.series);
     const data = {
         labels,
-        datasets: [
-            {
-                label: "test",
-                data: [0, 1, 2]
-            }
-        ]
+        datasets: formattedSeries
     }
 
     return (
